@@ -1,0 +1,22 @@
+version: "3"
+services:
+  api:
+    build: ./server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+      - /app/tmp
+      - /app/log
+
+  frontend:
+    build: ./client
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+    depends_on:
+      - api
