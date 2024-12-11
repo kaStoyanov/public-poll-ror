@@ -12,6 +12,8 @@ export default function PollView() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showSuccessSnack, setShowSuccessSnack] = useState(false);
+  const [formKey, setFormKey] = useState(0)
+  const [ snackKey, setSnackKey ] = useState(0)
 
   useEffect(() => {
     const fetchPoll = async () => {
@@ -20,6 +22,7 @@ export default function PollView() {
         setPoll(data);
       } catch (error) {
         console.error(error);
+        setError("Poll not found");
       } finally {
         setLoading(false);
       }
@@ -50,12 +53,16 @@ export default function PollView() {
         })),
       });
       setAnswers({});
+      console.log(answers);
+      setFormKey(prevKey => prevKey + 1) // setAnswers({}) isnt reseting radio button selectoin
+      setSnackKey(prevKey => prevKey + 1)
       setShowSuccessSnack(true);
     } catch (error) {
-      console.log(error);
+      setSnackKey(prevKey => prevKey + 1)
       setError(
-        error.response?.data?.errors?.base[0] ||
-          error?.response?.data?.error ||
+        error?.response?.data?.error ||
+        (error.response?.data?.errors?.base && 
+          error.response?.data?.errors?.base[0]) ||
           "You have already voted on this poll"
       );
     } finally {
@@ -83,7 +90,7 @@ export default function PollView() {
     <div className="max-w-2xl mt-12 px-4 bg-gray-550 mx-auto">
       <h1 className="text-2xl font-bold mb-6">{poll.title}</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-6">
         {poll.questions.map((question) => (
           <div key={question.id} className="p-6 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4 text-gray-500">
@@ -136,14 +143,15 @@ export default function PollView() {
           {submitting ? "Submitting..." : "Submit Answers"}
         </button>
       </form>
-      {error && (
-        <Snackbar message={error} isError={true} onClose={() => setError("")} />
-      )}
+      
       {showSuccessSnack && (
         <Snackbar
           message="Poll answered successfuly!!"
           onClose={() => setShowSuccessSnack(false)}
         />
+      )}
+      {error && (
+        <Snackbar key={snackKey} message={error} isError={true} onClose={() => setError("")} />
       )}
     </div>
   );

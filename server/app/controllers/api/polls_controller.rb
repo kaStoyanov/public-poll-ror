@@ -1,5 +1,5 @@
 class Api::PollsController < ApplicationController
-    before_action :authenticate_user!, except: [:show]
+    before_action :authenticate_user!, except: [:index, :show]
     before_action :admin_only!, only: [:create, :update, :destroy]
     
     def index
@@ -8,12 +8,18 @@ class Api::PollsController < ApplicationController
     end
     
     def show
-      poll = Poll.find(params[:id])
-      render json: poll
+      begin
+        poll = Poll.find(params[:id])
+        render json: poll
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: 'Poll not found' }, status: :not_found
+      end
     end
     
     def create
-      poll = current_user.polls.build(poll_params)
+      poll = Poll.new(poll_params)
+      poll.creator = current_user 
+  
       if poll.save
         render json: poll, status: :created
       else
@@ -35,7 +41,7 @@ class Api::PollsController < ApplicationController
     def poll_params
       params.require(:poll).permit(
         :title,
-        questions_attributes: [:text, :question_type, options: []]
+        questions_attributes: [:text, :question_type, :options => []]
       )
     end
   end

@@ -10,9 +10,12 @@ RUN gem install bundler
 RUN bundle config set force_ruby_platform true
 RUN bundle install
 
+RUN mkdir -p test/factories test/controllers
+
 COPY . .
 
 RUN bundle exec rails db:create db:migrate
+RUN RAILS_ENV=test bundle exec rails db:create db:migrate
 
 EXPOSE 3000
 
